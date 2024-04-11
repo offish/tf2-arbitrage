@@ -6,7 +6,7 @@
 [![Discord](https://img.shields.io/discord/467040686982692865?color=7289da&label=Discord&logo=discord)](https://discord.gg/t8nHSvA)
 [![Code style](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-Bot for arbitrating TF2 items on different sites for profit.
+Bot for arbitraging TF2 items on different sites for profit.
 
 This bot will find deals, act on them and notify [tf2-express](https://github.com/offish/tf2-express) to accept.
 

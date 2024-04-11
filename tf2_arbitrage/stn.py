@@ -7,10 +7,10 @@ import logging
 
 
 class STNTrading(STN):
-    def __init__(self, api_key: str, proxies: dict = {}) -> None:
+    def __init__(self, api_key: str) -> None:
         self.schema_utils = SchemaItemsUtils()
         self.schema = {}
-        super().__init__(api_key, proxies)
+        super().__init__(api_key)
 
     @staticmethod
     def __filter_items(item_names: list[str]) -> list[str]:
