@@ -58,7 +58,7 @@ TRADING_SITES_INTERVAL = 10 * 60 + 5.19  # ~10 minutes
 STN_TIMEOUT = 60.0  # seconds to sleep between rate limits
 
 SKIP_STN_SCHEMA_FETCH = True
-STN_SCHEMA_PATH = "./static/stn_schema"
+STN_SCHEMA_PATH = "./static/stn_schema.json"
 
 SKIP_INVENTORY_FETCH = False
 INVENTORY_PURE_STOCK = {"keys": 1, "metal": 52.11}  # if skip_inventory_fetch is True
