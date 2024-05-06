@@ -20,8 +20,8 @@ def get_sites_outdated_cookies(db: Database, sites: list[Site]) -> list[Site]:
         current_time = time.time()
 
         for cookie in cookies:
-            # google dogshit tracking cookies
-            if "_g" in cookie:
+            # google tracking cookies
+            if "_g" == cookie["name"][:2]:
                 continue
 
             if current_time <= cookie["expiry"]:

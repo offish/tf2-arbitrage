@@ -1,20 +1,24 @@
 from .database import Database
-from .config import HEADLESS
+from .config import HEADLESS, GECKODRIVER_EXECUTABLE_PATH
 
 import random
 import time
 
-from selenium.webdriver import Firefox, FirefoxOptions, FirefoxProfile
+from selenium.webdriver import Firefox, FirefoxOptions, FirefoxProfile, FirefoxService
 
 
 class Metadata:
     def __init__(self, firefox_profile: str, headless: bool = HEADLESS):
         options = FirefoxOptions()
-        options.headless = headless
+        service = FirefoxService(GECKODRIVER_EXECUTABLE_PATH)
+
+        if headless:
+            options.add_argument("--headless")
+
         options.profile = FirefoxProfile(firefox_profile)
 
         self.db = Database()
-        self.driver = Firefox(options=options)
+        self.driver = Firefox(options=options, service=service)
 
     def get_cookies(self, url: str, name: str) -> list[dict]:
         """Gets cookies for given URL"""

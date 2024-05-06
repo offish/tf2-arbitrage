@@ -98,9 +98,11 @@ def dump_to_json_file(data: dict | list, path: str) -> None:
 
 
 def read_json_file(path: str) -> dict | list:
-    file = open(path, "r")
-    data = json.loads(file.read())
-    file.close()
+    data = None
+
+    with open(path, "r") as file:
+        data = json.loads(file.read())
+
     return data
 
 
@@ -133,37 +135,3 @@ def compress_message(data: dict) -> dict:
     compressed = remove_unnecessary_data(compressed, "sell_data")
 
     return compressed
-
-
-class LoggingFormatter(logging.Formatter):
-    _format = "tf2-arbitrage | %(asctime)s - [%(levelname)s]: %(message)s"
-
-    FORMATS = {
-        logging.DEBUG: _format,
-        logging.INFO: _format,
-        logging.WARNING: _format,
-        logging.ERROR: _format + "(%(filename)s:%(lineno)d)",
-        logging.CRITICAL: _format + "(%(filename)s:%(lineno)d)",
-    }
-
-    def format(self, record):
-        log_fmt = self.FORMATS.get(record.levelno)
-        formatter = logging.Formatter(log_fmt, datefmt="%H:%M:%S")
-        return formatter.format(record)
-
-
-class LoggingFileFormatter(logging.Formatter):
-    _format = "%(filename)s %(asctime)s - [%(levelname)s]: %(message)s"
-
-    FORMATS = {
-        logging.DEBUG: _format,
-        logging.INFO: _format,
-        logging.WARNING: _format,
-        logging.ERROR: _format + "(%(filename)s:%(lineno)d)",
-        logging.CRITICAL: _format + "(%(filename)s:%(lineno)d)",
-    }
-
-    def format(self, record):
-        log_fmt = self.FORMATS.get(record.levelno)
-        formatter = logging.Formatter(log_fmt, datefmt="%d.%m %H:%M:%S")
-        return formatter.format(record)

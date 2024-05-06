@@ -6,9 +6,9 @@
 [![Discord](https://img.shields.io/discord/467040686982692865?color=7289da&label=Discord&logo=discord)](https://discord.gg/t8nHSvA)
 [![Code style](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-Bot for arbitrating TF2 items on different sites for profit.
+Bot for arbitraging TF2 items on different sites for profit.
 
-This bot will find deals, act on them and notify [tf2-express](https://github.com/offish/tf2-express) to accept.
+This bot will find deals, request trades and notify [tf2-express](https://github.com/offish/tf2-express) to accept.
 
 ## Donate
 - BTC: `bc1qntlxs7v76j0zpgkwm62f6z0spsvyezhcmsp0z2`
@@ -16,7 +16,7 @@ This bot will find deals, act on them and notify [tf2-express](https://github.co
 
 You can reach me at [Steam](https://steamcommunity.com/id/confern), 
 my [Discord server](https://discord.gg/t8nHSvA) 
-or [Discord profile](https://discord.com/users/252183247843229696>`)
+or [Discord profile](https://discord.com/users/252183247843229696>`).
 
 ## How does it work?
 - Using a Firefox profile, login to the sites listed below
@@ -33,25 +33,32 @@ or [Discord profile](https://discord.com/users/252183247843229696>`)
 - Save up to 3 pages of classifieds for Trade URLs, so they can be used later (can skip fetching)
 - Send deals using a TCP socket so `tf2-express` can act on the trades
 - When `tf2-express` has accepted a "buy deal" trade offer, send the "sell deal" request to one of the trading sites (different for Backpack.TF)
-- Repeat step 6-16 (fetching Prices.tf is uneccessary when we are connected to their websocket)
+- Repeat step 6-16 (fetching Prices.tf is uneccessary when we are connected to the websocket)
 
 ## Supported sites
 - Backpack.TF
 - STNTrading.eu
 - Quicksell.store
-- Sfuminator.tf (partly)
+- Sfuminator.tf
 
 Scrap.TF is not supported, due to their ToS.
 
-## What do I need?
-- A `tf2-express` bot
-- Firefox with a custom profile where you are logged into the sites listed above
-- `geckodriver` installed and added to PATH
-- Premium STN API key 
+## Installation
+- Clone the repo and install the packages `pip install -r requirements.txt`
+- The bot uses MongoDB, so `pymongo` needs to work
+- Install `geckodriver`
 
-## Don't have a Premium STN API key?
-STN are not accepting new ones, but the endpoints will be publicly available soon.
+## Setup
+- Have a `tf2-express` bot setup and ready to go
+- If `geckodriver` is not added to PATH, this needs to be specified in `GECKODRIVER_EXECUTABLE_PATH` in the [config](/tf2_arbitrage/config.py). If it is in PATH, do not change this value
+- Create a new Firefox profile and login to all the sites listed above (STN is not neccessary). Copy the `Root Directory` of this Firefox profile. This is your `FIREFOX_PROFILE_PATH` in the [config](/tf2_arbitrage/config.py)
+- Register a STN API key at https://stntrading.eu/dev/apikey
+- Make sure you have credits for your API calls. This can be increased at https://stntrading.eu/dev/credits
 
-![image](https://github.com/offish/tf2-utils/assets/30203217/59fe4448-6dc5-4cb5-a41a-a67406cfd54d)
+## Configuration
+- Specify `STEAM_ID` in the [config](/tf2_arbitrage/config.py), this has to match the SteamID64 for the owner of the STN API key 
+- Other optional modifications to the [config](/tf2_arbitrage/config.py)
 
-It's also possible to use the [stntrading](./tf2_arbitrage/sites/stntrading.py) version, but they have better detection for automated requests than Quicksell and Sfuminator.
+## Running
+- Start `tf2-arbitrage` by running `python main.py`
+- Start a `tf2-express` instance

@@ -10,8 +10,12 @@ from .config import (
     STN_API_KEY,
     STN_TIMEOUT,
     TRADING_SITES_INTERVAL,
-    STEAMSUPPLY_API_KEY,
+    INVENTORY_PROVIDER,
+    INVENTORY_API_KEY,
     SKIP_INVENTORY_FETCH,
+    SKIP_STN_SCHEMA_FETCH,
+    INVENTORY_PURE_STOCK,
+    STN_SCHEMA_PATH,
 )
 from .deals import Deals
 from .utils import (
@@ -40,7 +44,7 @@ import requests as r
 
 class Arbitrage:
     def __init__(self) -> None:
-        self.provider = Inventory("steamsupply", STEAMSUPPLY_API_KEY)
+        self.provider = Inventory(INVENTORY_PROVIDER, INVENTORY_API_KEY)
 
         self.stn = STNTrading(STN_API_KEY)
         quicksell_store = QuicksellStore(r)
@@ -408,7 +412,7 @@ class Arbitrage:
         socket_thread.start()
 
         if SKIP_INVENTORY_FETCH:
-            self.pure = {"keys": 1, "metal": 50.22}
+            self.pure = INVENTORY_PURE_STOCK
             self.deals.pure_stock = self.pure
         else:
             self.__set_inventory_pure()
@@ -421,7 +425,12 @@ class Arbitrage:
         logging.info("got prices from prices.tf")
 
         # get and set this once
-        self.stn_schema = self.stn.get_sku_schema()
+        if SKIP_STN_SCHEMA_FETCH:
+            self.stn_schema = read_json_file(STN_SCHEMA_PATH)
+            self.stn.schema = self.stn_schema
+        else:
+            self.stn_schema = self.stn.get_sku_schema()
+
         logging.info(f"stn schema got {len(self.stn_schema)} items")
 
         self.sku_list = list(self.stn_schema.keys())

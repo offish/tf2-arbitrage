@@ -2,13 +2,15 @@
 FIREFOX_PROFILE_PATH = (
     r"C:\Users\USER\AppData\Roaming\Mozilla\Firefox\Profiles\SOME.PROFILE"
 )
+GECKODRIVER_EXECUTABLE_PATH = r"geckodriver"
 HEADLESS = True
+STEAM_ID = "76561198828172881"
 
 
 # api keys
-STEAMSUPPLY_API_KEY = ""
+INVENTORY_PROVIDER = "steamcommunity"  # or steamsupply
+INVENTORY_API_KEY = ""  # steamcommunity does not require an api key
 STN_API_KEY = ""
-STEAM_ID = "76561198828172881"
 
 # database
 DB_HOST = "localhost"
@@ -30,7 +32,7 @@ BLACKLISTED_INCLUDE = [
     "Case",
     "Crate",
     "Key",
-    "Non-Craftable",  # soon supported
+    "Non-Craftable",
     "Australium",
 ]
 BLACKLISTED_LISTING_DETAIL = [
@@ -51,15 +53,19 @@ BLACKLISTED_LISTING_DETAIL = [
     "halloween",
 ]
 MAX_LAST_BUMP = 60.0  # minutes since last bump
-BACKPACK_TF_PAGES = 3
-TRADING_SITES_INTERVAL = 10 * 60 + 5.19  # ~15 minutes
-STN_TIMEOUT = 60.0
+BACKPACK_TF_PAGES = 3  # how many pages to fetch when getting an item (trade urls also)
+TRADING_SITES_INTERVAL = 10 * 60 + 5.19  # ~10 minutes
+STN_TIMEOUT = 60.0  # seconds to sleep between rate limits
 
-SKIP_INVENTORY_FETCH = True
+SKIP_STN_SCHEMA_FETCH = True
+STN_SCHEMA_PATH = "./static/stn_schema"
+
+SKIP_INVENTORY_FETCH = False
+INVENTORY_PURE_STOCK = {"keys": 1, "metal": 52.11}  # if skip_inventory_fetch is True
 # SKIP_INVENTORY_FETCH = False
-SKIP_PRICES_TF_FETCH = False
-# SKIP_PRICES_TF_FETCH = True
+# SKIP_PRICES_TF_FETCH = False
+SKIP_PRICES_TF_FETCH = True
 # MAX_PRICES_TF_PAGES = 30
 MAX_PRICES_TF_PAGES = 180  # -1 for all
 MINIMUM_PROFIT_REQUIRED = 0.11
-PRICES_TF_FILE = "./prod/1709979305_prices.json"
+PRICES_TF_FILE = "./prod/1711970722_prices.json"

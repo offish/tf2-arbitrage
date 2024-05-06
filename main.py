@@ -1,5 +1,5 @@
 from tf2_arbitrage.arbitrage import Arbitrage
-from tf2_arbitrage.utils import LoggingFormatter, LoggingFileFormatter
+from offish import Formatter, FileFormatter
 
 from threading import Thread
 import logging
@@ -11,7 +11,7 @@ from tf2_utils import PricesTFSocket
 stream_handler = logging.StreamHandler(sys.stdout)
 file_handler = logging.FileHandler("./logs.log", encoding="utf-8")
 
-# selenium fucks up the logs
+# selenium spams the logs
 logger = logging.getLogger("selenium.webdriver.remote.remote_connection")
 logger.setLevel(logging.INFO)
 
@@ -23,11 +23,14 @@ logging.basicConfig(
     ],
 )
 
+formatter = Formatter()
+formatter.application = "tf2-arbitrage"
+
 stream_handler.setLevel(logging.INFO)
-stream_handler.setFormatter(LoggingFormatter())
+stream_handler.setFormatter(formatter)
 
 file_handler.setLevel(logging.DEBUG)
-file_handler.setFormatter(LoggingFileFormatter())
+file_handler.setFormatter(FileFormatter())
 
 arbitrage = Arbitrage()
 
