@@ -5,13 +5,14 @@
 [![Size](https://img.shields.io/github/repo-size/offish/tf2-arbitrage.svg)](https://github.com/offish/tf2-arbitrage)
 [![Discord](https://img.shields.io/discord/467040686982692865?color=7289da&label=Discord&logo=discord)](https://discord.gg/t8nHSvA)
 [![Code style](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 
 Bot for arbitraging TF2 items on different sites for profit.
 
 This bot will find deals, request trades and notify [tf2-express](https://github.com/offish/tf2-express) to accept.
 
 ## Donate
-- BTC: `bc1qntlxs7v76j0zpgkwm62f6z0spsvyezhcmsp0z2`
+- BTC: `bc1q9gmh5x2g9s0pw3282a5ypr6ms8qvuxh3fd7afh`
 - [Steam Trade Offer](https://steamcommunity.com/tradeoffer/new/?partner=293059984&token=0-l_idZR)
 
 You can reach me at [Steam](https://steamcommunity.com/id/confern), 
@@ -41,7 +42,7 @@ or [Discord profile](https://discord.com/users/252183247843229696>`).
 - Quicksell.store
 - Sfuminator.tf
 
-Scrap.TF is not supported, due to their ToS.
+Scrap.TF will not be supported, due to their ToS.
 
 ## Installation
 - Clone the repo and install the packages `pip install -r requirements.txt`

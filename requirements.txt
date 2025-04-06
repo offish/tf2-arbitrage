@@ -1,10 +1,9 @@
+tf2-sku>=2.0.0
+tf2-data>=1.0.0
+tf2-utils>=2.3.3
+stntrading>=1.1.0
 requests
 selenium
 pymongo
 beautifulsoup4
-tf2-sku
-tf2-data
-tf2-utils
-stntrading
-websocket-client
-offish
+websockets

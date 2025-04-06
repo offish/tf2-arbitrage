@@ -1,47 +1,44 @@
-from tf2_arbitrage.arbitrage import Arbitrage
-from offish import Formatter, FileFormatter
-
-from threading import Thread
+import asyncio
 import logging
 import sys
 
-from tf2_utils import PricesTFSocket
+from dotenv import load_dotenv
 
-
-stream_handler = logging.StreamHandler(sys.stdout)
-file_handler = logging.FileHandler("./logs.log", encoding="utf-8")
-
-# selenium spams the logs
-logger = logging.getLogger("selenium.webdriver.remote.remote_connection")
-logger.setLevel(logging.INFO)
-
-logging.basicConfig(
-    level=logging.DEBUG,
-    handlers=[
-        stream_handler,
-        file_handler,
-    ],
+from tf2_arbitrage.arbitrage import Arbitrage
+from tf2_arbitrage.options import Options
+from tf2_arbitrage.utils import (
+    ArbitrageFileFormatter,
+    ArbitrageFormatter,
+    create_and_get_log_file,
+    get_config,
 )
 
-formatter = Formatter()
-formatter.application = "tf2-arbitrage"
+load_dotenv()
 
+
+formatter = ArbitrageFormatter()
+stream_handler = logging.StreamHandler(sys.stdout)
+
+log_file = create_and_get_log_file()
+file_handler = logging.FileHandler(log_file, encoding="utf-8")
+
+logging.getLogger("pymongo").setLevel(logging.INFO)
+logging.getLogger("websockets").setLevel(logging.INFO)
+logging.basicConfig(level=logging.DEBUG, handlers=[stream_handler, file_handler])
+
+# only want to see info and above in console
 stream_handler.setLevel(logging.INFO)
-stream_handler.setFormatter(formatter)
+# stream_handler.setLevel(logging.DEBUG)
+stream_handler.setFormatter(ArbitrageFormatter())
 
+# want to have everything in the log file
 file_handler.setLevel(logging.DEBUG)
-file_handler.setFormatter(FileFormatter())
-
-arbitrage = Arbitrage()
+file_handler.setFormatter(ArbitrageFileFormatter())
 
 
-def on_socket_data(data: dict) -> None:
-    arbitrage.on_socket_data(data)
-
+config = get_config()
+options = Options(**config)
+arbitrage = Arbitrage(options)
 
 if __name__ == "__main__":
-    prices_socket = PricesTFSocket(on_socket_data)
-    prices_socket_thread = Thread(target=prices_socket.listen, daemon=True)
-    prices_socket_thread.start()
-    arbitrage.run()
-    prices_socket_thread.join()
+    asyncio.run(arbitrage.start())

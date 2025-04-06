@@ -1,0 +1,38 @@
+{
+    "firefox_profile": "C:/Users/USER/AppData/Roaming/Mozilla/Firefox/Profiles/SOME.PROFILE",
+    "steam_id": "76561198253325712",
+    "blacklisted_include": [
+        "(Factory New)",
+        "(Minimal Wear)",
+        "(Field-Tested)",
+        "(Well-Worn)",
+        "(Battle Scarred)",
+        "Unusual",
+        "Killstreak",
+        "Haunted",
+        "#",
+        "Strange Part:",
+        "Case",
+        "Crate",
+        "Key",
+        "Non-Craftable",
+        "Australium"
+    ],
+    "blacklisted_listing_detail": [
+        "spell",
+        "paint",
+        "lvl",
+        "level",
+        "black",
+        "white",
+        "pink",
+        "lime",
+        "gold",
+        "#",
+        "craft #",
+        "number",
+        "voices",
+        "footprints",
+        "halloween"
+    ]
+}

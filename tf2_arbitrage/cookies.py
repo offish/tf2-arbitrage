@@ -1,10 +1,10 @@
-from .sites.sites import Site
-from .database import Database
-from .metadata import Metadata
-from .config import FIREFOX_PROFILE_PATH
-
 import logging
 import time
+
+from .config import FIREFOX_PROFILE_PATH
+from .database import Database
+from .metadata import Metadata
+from .sites.sites import Site
 
 
 def get_sites_outdated_cookies(db: Database, sites: list[Site]) -> list[Site]:

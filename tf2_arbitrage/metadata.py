@@ -1,10 +1,10 @@
-from .database import Database
-from .config import HEADLESS, GECKODRIVER_EXECUTABLE_PATH
-
 import random
 import time
 
 from selenium.webdriver import Firefox, FirefoxOptions, FirefoxProfile, FirefoxService
+
+from .config import GECKODRIVER_EXECUTABLE_PATH, HEADLESS
+from .database import Database
 
 
 class Metadata:

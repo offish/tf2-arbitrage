@@ -1,14 +1,71 @@
-from .config import STN_API_KEY, BLACKLISTED_INCLUDE
-
-import logging
 import json
-import time
+import logging
+from datetime import datetime
+from pathlib import Path
 
 from stntrading import STN
 from tf2_utils import to_refined
 
+from .config import BLACKLISTED_INCLUDE, STN_API_KEY
+from .exceptions import NoConfigFound, NoFileFound
 
 key_price_reference = None
+
+
+def create_and_get_log_file() -> Path:
+    current_date = datetime.today().strftime("%Y-%m-%d")
+    file_path = Path(__file__).parent.parent / f"logs/arbitrage-{current_date}.log"
+
+    if not file_path.exists():
+        file_path.touch()
+
+    return file_path
+
+
+def dump_to_json_file(data: dict | list, path: Path | str) -> None:
+    with open(path, "w") as file:
+        json.dump(data, file, indent=4)
+
+
+def read_json_file(path: Path | str) -> dict | list:
+    data = None
+
+    with open(path, "r") as file:
+        data = json.loads(file.read())
+
+    return data
+
+
+def get_config() -> dict:
+    path = Path(__file__).parent / "config.json"
+
+    if not path.exists():
+        raise NoConfigFound("No config.json file in the tf2_arbitrage directory!")
+
+    return read_json_file(path)
+
+
+def get_files_path() -> Path:
+    return Path(__file__).parent.parent / "files"
+
+
+def get_file_path(name: str) -> Path:
+    path = get_files_path() / f"{name}.json"
+
+    if not path.exists():
+        raise NoFileFound(f"No {name} file in the tf2_arbitrage/files directory!")
+
+    return path
+
+
+def get_file_content(name: str) -> dict:
+    path = get_file_path(name)
+    return read_json_file(path)
+
+
+def dump_to_file(name: str, data: dict | list) -> None:
+    path = get_file_path(name)
+    dump_to_json_file(data, path)
 
 
 def get_stn_key_price() -> float:
@@ -87,51 +144,35 @@ def has_invalid_defindex(sku: str) -> bool:
     return sku.split(";")[0] == "-1"
 
 
-def get_file_name(identifier: str) -> str:
-    return f"./prod/{int(time.time())}_{identifier}.json"
+class ArbitrageFormatter(logging.Formatter):
+    _format = "tf2-arbitrage | %(asctime)s - [%(levelname)s]: %(message)s"
+
+    FORMATS = {
+        logging.DEBUG: _format,
+        logging.INFO: _format,
+        logging.WARNING: _format,
+        logging.ERROR: _format + "(%(filename)s:%(lineno)d)",
+        logging.CRITICAL: _format + "(%(filename)s:%(lineno)d)",
+    }
+
+    def format(self, record):
+        log_fmt = self.FORMATS.get(record.levelno)
+        formatter = logging.Formatter(log_fmt, datefmt="%H:%M:%S")
+        return formatter.format(record)
 
 
-def dump_to_json_file(data: dict | list, path: str) -> None:
-    file = open(path, "w")
-    json.dump(data, file, indent=4)
-    file.close()
+class ArbitrageFileFormatter(logging.Formatter):
+    _format = "%(filename)s %(asctime)s - [%(levelname)s]: %(message)s"
 
+    FORMATS = {
+        logging.DEBUG: _format,
+        logging.INFO: _format,
+        logging.WARNING: _format,
+        logging.ERROR: _format + "(%(filename)s:%(lineno)d)",
+        logging.CRITICAL: _format + "(%(filename)s:%(lineno)d)",
+    }
 
-def read_json_file(path: str) -> dict | list:
-    data = None
-
-    with open(path, "r") as file:
-        data = json.loads(file.read())
-
-    return data
-
-
-def encode_data(data: dict) -> bytes:
-    return (json.dumps(data) + "NEW_DATA").encode()
-
-
-def decode_data(data: bytes) -> list[dict]:
-    return [json.loads(doc) for doc in data.decode().split("NEW_DATA") if doc]
-
-
-def remove_unnecessary_data(data: dict, intent: str) -> dict:
-    compressed = data.copy()
-    keys_to_delete = []
-
-    for key in data.get(intent, {}):
-        if key not in ["trade_url", "steamid"]:
-            keys_to_delete.append(key)
-
-    for key in keys_to_delete:
-        del compressed[intent][key]
-
-    return compressed
-
-
-def compress_message(data: dict) -> dict:
-    compressed = data.copy()
-
-    compressed = remove_unnecessary_data(compressed, "buy_data")
-    compressed = remove_unnecessary_data(compressed, "sell_data")
-
-    return compressed
+    def format(self, record):
+        log_fmt = self.FORMATS.get(record.levelno)
+        formatter = logging.Formatter(log_fmt, datefmt="%d/%m/%Y %H:%M:%S")
+        return formatter.format(record)

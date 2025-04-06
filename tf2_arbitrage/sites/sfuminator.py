@@ -1,9 +1,9 @@
-from .sites import Site
-
 import logging
 
+from tf2_data import DEFINDEX_NAMES, QUALITIES
 from tf2_sku import to_sku
-from tf2_data import QUALITIES, DEFINDEX_NAMES
+
+from .sites import Site
 
 
 class Sfuminator(Site):
@@ -26,7 +26,7 @@ class Sfuminator(Site):
 
         super().__init__(r, name, url, api_url, headers)
 
-    def __item_data_to_sku(self, item_name: str, item: dict) -> str:
+    def _item_data_to_sku(self, item_name: str, item: dict) -> str:
         if item_name not in DEFINDEX_NAMES:
             return ""
 
@@ -38,7 +38,7 @@ class Sfuminator(Site):
 
         return to_sku(properties)
 
-    def __format_inventory(self, inventory: dict, intent: str) -> None:
+    def _format_inventory(self, inventory: dict, intent: str) -> None:
         for item in inventory:
             if "steam_item" not in item:
                 logging.warning("No steam_item in inventory, maybe not logged in?")
@@ -48,7 +48,7 @@ class Sfuminator(Site):
             keys = item["keys"]
             metal = item["metal"]
             asset_id = item["instance_id"]
-            sku = self.__item_data_to_sku(item_name, item)
+            sku = self._item_data_to_sku(item_name, item)
 
             if not sku:
                 continue
@@ -63,11 +63,11 @@ class Sfuminator(Site):
 
     def fetch_our_inventory(self) -> None:
         inventory = self.get_request("/user-inventory", params={})
-        self.__format_inventory(inventory, "sell")
+        self._format_inventory(inventory, "sell")
 
     def fetch_site_inventory(self) -> None:
         inventory = self.get_request("/bot-inventory", params={})
-        self.__format_inventory(inventory, "buy")
+        self._format_inventory(inventory, "buy")
 
     def request_trade(self, sku: str, intent: str) -> dict:
         logging.info(f"Requesting {self.name} {intent} for {sku}")

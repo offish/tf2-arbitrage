@@ -1,17 +1,17 @@
-from .sites.sites import Site
-from .database import Database
-from .config import BACKPACK_TF_PAGES, BLACKLISTED_LISTING_DETAIL, MAX_LAST_BUMP
-from .utils import their_is_less_or_equal, their_is_more_or_equal
-
-from urllib.parse import urlencode
 import logging
 import time
+from urllib.parse import urlencode
 
-from selenium.webdriver import Firefox
-from tf2_utils import sku_to_defindex, account_id_to_steam_id, get_token_from_trade_url
-from tf2_data import DEFINDEX_NAMES, DEFINDEX_FULL_NAMES
-from tf2_sku import to_sku, from_sku
 from bs4 import BeautifulSoup
+from selenium.webdriver import Firefox
+from tf2_data import DEFINDEX_FULL_NAMES, DEFINDEX_NAMES
+from tf2_sku import from_sku, to_sku
+from tf2_utils import account_id_to_steam_id, get_token_from_trade_url, sku_to_defindex
+
+from .config import BACKPACK_TF_PAGES, BLACKLISTED_LISTING_DETAIL, MAX_LAST_BUMP
+from .database import Database
+from .sites.sites import Site
+from .utils import their_is_less_or_equal, their_is_more_or_equal
 
 
 class BackpackTF(Site):
@@ -41,29 +41,36 @@ class BackpackTF(Site):
         self.driver = None
 
     @staticmethod
-    def __is_supported_bot(client: str) -> bool:
-        for bot in ["tf2autobot", "gladiator.tf", "scrapyardbot"]:
+    def _is_supported_bot(client: str) -> bool:
+        for bot in [
+            "tf2autobot",
+            "gladiator.tf",
+            "scrapyardbot",
+            "tf2-utils",
+            "tf2-express",
+            "tf2-automatic",
+        ]:
             if bot in client:
                 return True
 
         return False
 
     @staticmethod
-    def __is_recently_bumped(listing: dict) -> bool:
+    def _is_recently_bumped(listing: dict) -> bool:
         return time.time() < listing["bump"] + MAX_LAST_BUMP
 
-    def __is_bot_listning(self, listing: dict) -> bool:
+    def _is_bot_listning(self, listing: dict) -> bool:
         if "userAgent" not in listing:
             return False
 
         client = listing["userAgent"]["client"].lower()
 
-        if not self.__is_supported_bot(client):
+        if not self._is_supported_bot(client):
             return False
 
         return True
 
-    def __has_blacklisted_details(self, listing: dict) -> bool:
+    def _has_blacklisted_details(self, listing: dict) -> bool:
         # turn special characters into normal ones?
         details = listing.get("details", "").lower()
 
@@ -73,7 +80,7 @@ class BackpackTF(Site):
 
         return False
 
-    def __has_matching_sku(self, listing: dict, sku: str) -> bool:
+    def _has_matching_sku(self, listing: dict, sku: str) -> bool:
         item = listing["item"]
         sku_properties = {
             "defindex": item["defindex"],
@@ -83,7 +90,7 @@ class BackpackTF(Site):
 
         return sku == to_sku(sku_properties)
 
-    def __has_good_price(
+    def _has_good_price(
         self, listing: dict, prices: dict, sku: str, intent: str
     ) -> bool:
         price = listing["currencies"]
@@ -101,7 +108,7 @@ class BackpackTF(Site):
         # they are buying, so more or equal to buy is best
         return their_is_more_or_equal(price, prices[sku]["buy"])
 
-    def __is_valid_listing(
+    def _is_valid_listing(
         self, listing: dict, intent: str, sku: str, prices: dict
     ) -> bool:
         # has to match intent
@@ -112,26 +119,26 @@ class BackpackTF(Site):
         if listing["offers"] != 1:
             return False
 
-        if not self.__is_bot_listning(listing):
+        if not self._is_bot_listning(listing):
             return False
 
-        if not self.__is_recently_bumped(listing):
+        if not self._is_recently_bumped(listing):
             return False
 
-        if self.__has_blacklisted_details(listing):
+        if self._has_blacklisted_details(listing):
             return False
 
         # matches sku
-        if not self.__has_matching_sku(listing, sku):
+        if not self._has_matching_sku(listing, sku):
             return False
 
         # intent is "sell" when we buy
-        if not self.__has_good_price(listing, prices, sku, intent):
+        if not self._has_good_price(listing, prices, sku, intent):
             return False
 
         return True
 
-    def __format_html_classifieds(self, html: str) -> None:
+    def _format_html_classifieds(self, html: str) -> None:
         soup = BeautifulSoup(html, "html.parser")
 
         for listing in soup.find_all("div", class_="item"):
@@ -147,7 +154,7 @@ class BackpackTF(Site):
             # save all trade urls in database for use later
             self.db.add_trade_url(steam_id, account_id, token)
 
-    def __get_trade_url(self, sku: str, steam_id: str) -> str:
+    def _get_trade_url(self, sku: str, steam_id: str) -> str:
         if self.driver is None:
             self.driver = Firefox(options=self.options)
 
@@ -172,11 +179,11 @@ class BackpackTF(Site):
 
             time.sleep(3)
 
-            self.__format_html_classifieds(self.driver.page_source)
+            self._format_html_classifieds(self.driver.page_source)
 
         return self.db.get_trade_url(steam_id)
 
-    def __get_listings(self, sku: str) -> dict:
+    def _get_listings(self, sku: str) -> dict:
         defindex = sku_to_defindex(sku)
         item_name = DEFINDEX_FULL_NAMES[str(defindex)]
 
@@ -189,7 +196,7 @@ class BackpackTF(Site):
         if "limit exceeded" in response.get("message", ""):
             logging.warning("bptf rate limited")
             time.sleep(1.1)
-            return self.__get_listings(sku)
+            return self._get_listings(sku)
 
         if listings_amount == 0:
             logging.warning("did not find any listings")
@@ -197,23 +204,20 @@ class BackpackTF(Site):
 
         return response
 
-    def __get_valid_listing(self, sku: str, intent: str, prices: dict) -> dict:
+    def _get_valid_listing(self, sku: str, intent: str, prices: dict) -> dict:
         logging.info("getting listings")
-        listings = self.__get_listings(sku)
+        listings = self._get_listings(sku)
         valid_listing = {}
 
         if not listings:
             return {}
 
         for listing in listings["listings"]:
-            if not self.__is_valid_listing(listing, intent, sku, prices):
+            if not self._is_valid_listing(listing, intent, sku, prices):
                 continue
 
             logging.info("found a valid listing")
 
-            # TODO: this only matches the first and stops,
-            # maybe do all which have matching price?
-            # valid listing, break
             valid_listing = listing
             break
 
@@ -225,18 +229,17 @@ class BackpackTF(Site):
         trade_url = self.db.get_trade_url(steam_id)
 
         if not trade_url:
-            trade_url = self.__get_trade_url(sku, steam_id)
+            trade_url = self._get_trade_url(sku, steam_id)
 
-        # TODO: make this nicer, has to be done twice
         if not trade_url:
-            logging.info("could not find trade url for user")
+            logging.info(f"Could not find Trade URL for {steam_id}")
             return {}
 
         valid_listing["trade_url"] = trade_url
         return valid_listing
 
     def get_lowest_sell(self, sku: str, prices: dict) -> dict:
-        return self.__get_valid_listing(sku, "sell", prices)
+        return self._get_valid_listing(sku, "sell", prices)
 
     def get_highest_buy(self, sku: str, prices: dict) -> dict:
-        return self.__get_valid_listing(sku, "buy", prices)
+        return self._get_valid_listing(sku, "buy", prices)

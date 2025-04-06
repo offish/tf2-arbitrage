@@ -1,11 +1,11 @@
-from .sites import Site
-
-from datetime import datetime, timezone
 import logging
+from datetime import datetime, timezone
 
-from tf2_utils import to_refined, to_scrap
-from tf2_sku import to_sku
 from tf2_data import QUALITIES
+from tf2_sku import to_sku
+from tf2_utils import to_refined, to_scrap
+
+from .sites import Site
 
 
 class QuicksellStore(Site):
@@ -68,7 +68,7 @@ class QuicksellStore(Site):
         }
         # self.utils = SchemaItemsUtils()
 
-    def __item_data_to_sku(self, item_name: str, item: dict) -> str:
+    def _item_data_to_sku(self, item_name: str, item: dict) -> str:
         craftable = item_name.find("Non-Craftable") == -1
 
         properties = {
@@ -79,7 +79,7 @@ class QuicksellStore(Site):
 
         return to_sku(properties)
 
-    def __format_inventory(self, inventory: dict, intent: str) -> None:
+    def _format_inventory(self, inventory: dict, intent: str) -> None:
         if not inventory:
             logging.warning("No inventory found")
             return
@@ -92,23 +92,23 @@ class QuicksellStore(Site):
             keys = 0
             metal = to_refined(item["scrap"])
             asset_id = item["assetid"]
-            sku = self.__item_data_to_sku(item["name"], item_data)
+            sku = self._item_data_to_sku(item["name"], item_data)
 
             self.add_item(sku, intent, item_name, asset_id, keys, metal)
 
-    def __can_afford(self, our_stock: dict, their_scrap: int) -> bool:
+    def _can_afford(self, our_stock: dict, their_scrap: int) -> bool:
         our_scrap = to_scrap(our_stock["keys"] * 63.0 + our_stock["metal"])
         return our_scrap >= their_scrap
 
-    def __fetch_till_cant_afford(self) -> dict:
+    def _fetch_till_cant_afford(self) -> dict:
         inventory = {"inv": []}
         pure_stock = {"keys": 0, "metal": 50.11}
         their_scrap = 0
         loaded = 0
 
-        while self.__can_afford(
-            pure_stock, their_scrap
-        ) and self.__is_correct_increment(loaded):
+        while self._can_afford(pure_stock, their_scrap) and self._is_correct_increment(
+            loaded
+        ):
             json = {
                 "side": "ours",
                 "filters": self.filters,
@@ -130,16 +130,16 @@ class QuicksellStore(Site):
 
         return inventory
 
-    def __is_correct_increment(self, number: int) -> bool:
+    def _is_correct_increment(self, number: int) -> bool:
         return number % 80 == 0
 
-    def __fetch_till_wrong_increment(self) -> dict:
+    def _fetch_till_wrong_increment(self) -> dict:
         inventory = {"inv": []}
         loaded = 0
         last_loaded = -1
 
         # 0 items in inventory is edge case
-        while self.__is_correct_increment(loaded) and loaded != last_loaded:
+        while self._is_correct_increment(loaded) and loaded != last_loaded:
             last_loaded = loaded
             json = {
                 "side": "theirs",
@@ -162,13 +162,13 @@ class QuicksellStore(Site):
 
     def fetch_our_inventory(self) -> None:
         self.clear_prices()
-        inventory = self.__fetch_till_wrong_increment()
-        self.__format_inventory(inventory, "sell")
+        inventory = self._fetch_till_wrong_increment()
+        self._format_inventory(inventory, "sell")
 
     def fetch_site_inventory(self) -> None:
         self.clear_prices()
-        inventory = self.__fetch_till_cant_afford()
-        self.__format_inventory(inventory, "buy")
+        inventory = self._fetch_till_cant_afford()
+        self._format_inventory(inventory, "buy")
 
     def request_trade(self, sku: str, intent: str) -> dict:
         logging.info(f"Requesting {self.name} {intent} for {sku}")
@@ -207,7 +207,6 @@ class QuicksellStore(Site):
             }
         )
 
-        # TODO: test selling (if the minus part works unsure)
         json["value"] = -item_price if intent == "buy" else item_price
 
         return self.post_request("/trade", json=json)

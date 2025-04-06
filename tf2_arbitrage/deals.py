@@ -1,9 +1,10 @@
-from .config import MINIMUM_PROFIT_REQUIRED
-from .utils import can_afford_price, has_invalid_defindex, get_stn_key_price
-
 import logging
 
 from tf2_utils import to_refined, to_scrap
+
+from .config import MINIMUM_PROFIT_REQUIRED
+from .site import SiteEnum
+from .utils import can_afford_price, get_stn_key_price, has_invalid_defindex
 
 
 class Deals:
@@ -26,12 +27,9 @@ class Deals:
         """only pricestf prices"""
         self.global_prices[sku]["pricestf"] = prices
 
-    def add_prices(self, prices: dict, site: str) -> None:
-        # TODO: what if an item has been sold on a site
-        # its no longer available but still in the priceslist
-        # either delete before adding or do something else
-
-        logging.info(f"adding prices for {site}")
+    def add_prices(self, prices: dict, site: SiteEnum) -> None:
+        site = site.value
+        logging.info(f"Adding prices for {site}...")
 
         if site not in self.sites:
             self.sites.append(site)
@@ -61,7 +59,7 @@ class Deals:
             if "sell" in price:
                 self.global_prices[sku][site]["sell"] = price["sell"]
 
-    def __get_deal_data(self, sku: str) -> dict:
+    def _get_deal_data(self, sku: str) -> dict:
         """checks wheter or not if its a deal."""
         sell_prices = []
         buy_prices = []
@@ -135,7 +133,7 @@ class Deals:
         if site_counter <= 1:
             return {}
 
-        deal_data = self.__get_deal_data(sku)
+        deal_data = self._get_deal_data(sku)
 
         if not deal_data["is_deal"]:
             return {}

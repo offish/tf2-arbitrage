@@ -1,9 +1,9 @@
-from .utils import is_blacklisted
+import logging
 
 from stntrading import STN
 from tf2_utils import SchemaItemsUtils
 
-import logging
+from .utils import is_blacklisted
 
 
 class STNTrading(STN):
@@ -13,7 +13,7 @@ class STNTrading(STN):
         super().__init__(api_key)
 
     @staticmethod
-    def __filter_items(item_names: list[str]) -> list[str]:
+    def _filter_items(item_names: list[str]) -> list[str]:
         items = []
 
         for item_name in item_names:
@@ -24,18 +24,18 @@ class STNTrading(STN):
 
         return items
 
-    def __item_name_to_sku(self, item_name: str) -> str:
+    def _item_name_to_sku(self, item_name: str) -> str:
         return self.schema_utils.name_to_sku(item_name)
 
-    def __sku_to_item_name(self, sku: str) -> str:
+    def _sku_to_item_name(self, sku: str) -> str:
         return self.schema.get(sku, "")
 
     def get_sku_schema(self) -> dict:
         schema = self.get_schema()
-        items = self.__filter_items(schema["result"]["schema"])
+        items = self._filter_items(schema["result"]["schema"])
 
         for item_name in items:
-            sku = self.__item_name_to_sku(item_name)
+            sku = self._item_name_to_sku(item_name)
 
             # map sku to item name so we can go backwards in sku to name
             self.schema[sku] = item_name
@@ -43,7 +43,7 @@ class STNTrading(STN):
         return self.schema
 
     def get_prices(self, sku: str) -> dict:
-        item_name = self.__sku_to_item_name(sku)
+        item_name = self._sku_to_item_name(sku)
 
         try:
             return self.get_item_details(item_name)

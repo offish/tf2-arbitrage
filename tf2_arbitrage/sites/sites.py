@@ -1,14 +1,13 @@
 import json
 import logging
-
-from ..config import FIREFOX_PROFILE_PATH, HEADLESS, STEAM_ID
-import time
 import random
+import time
 
 import requests
 from selenium.webdriver import FirefoxOptions, FirefoxProfile
-
 from tf2_utils import SchemaItemsUtils
+
+from ..config import FIREFOX_PROFILE_PATH, HEADLESS, STEAM_ID
 
 
 class Site:
@@ -55,12 +54,11 @@ class Site:
     def clear_prices(self) -> None:
         self.prices = {}
 
-    def fetch_site_inventory(self) -> None: ...
+    def fetch_site_inventory(self) -> None:
+        pass
 
-    # def get_site_inventory(self) -> dict:
-    #     return self.site_inventory
-
-    def fetch_our_inventory(self) -> None: ...
+    def fetch_our_inventory(self) -> None:
+        pass
 
     def get_inventories(self) -> None:
         """Get site and our inventories"""
@@ -68,10 +66,8 @@ class Site:
         self.fetch_our_inventory()
         logging.info(f"got inventories from {self.name}")
 
-    def request_trade(self, sku: str, intent: str) -> dict: ...
-
-    # def get_our_inventory(self) -> dict:
-    #     return self.our_inventory
+    def request_trade(self, sku: str, intent: str) -> dict:
+        pass
 
     def get_price(self, sku: str) -> dict:
         """
@@ -88,20 +84,11 @@ class Site:
         logging.debug("cookies set")
 
     @staticmethod
-    def __get_content_from_response(res: requests.Response) -> str:
-        # TODO: check if compressed with brotli
-        # for some reason quicksell this condition is true
-        # but the decompression does not work
-
-        # if res.headers.get("Content-Encoding") == "br":
-        #     return brotli.decompress(res.content)
-
-        # logging.debug(f"{res.content}")
-
+    def _get_content_from_response(res: requests.Response) -> str:
         return res.content
 
-    def __response_to_json(self, res: requests.Response) -> dict:
-        content = self.__get_content_from_response(res)
+    def _response_to_json(self, res: requests.Response) -> dict:
+        content = self._get_content_from_response(res)
         # logging.debug(f"content: {content}")
 
         # if "Enable JavaScript and cookies to continue" in content.decode("utf-8"):
@@ -119,11 +106,11 @@ class Site:
             return {}
 
     @staticmethod
-    def __get_asset_ids_key(intent: str) -> str:
+    def _get_asset_ids_key(intent: str) -> str:
         return "site_asset_ids" if intent == "buy" else "our_asset_ids"
 
     def get_asset_id_from_sku(self, sku: str, intent: str) -> str:
-        asset_id_key = self.__get_asset_ids_key(intent)
+        asset_id_key = self._get_asset_ids_key(intent)
         return self.prices[sku][asset_id_key][0]
 
     def add_item(
@@ -137,7 +124,7 @@ class Site:
         steam_id: str = "",
     ) -> None:
         """Add an item to prices"""
-        asset_ids_key = self.__get_asset_ids_key(intent)
+        asset_ids_key = self._get_asset_ids_key(intent)
 
         if sku not in self.prices:
             self.prices[sku] = {
@@ -161,27 +148,27 @@ class Site:
             else:
                 self.prices[sku][asset_ids_key].append(asset_id)
 
-    def __sleep_random(self) -> None:
+    def _sleep_random(self) -> None:
         sleep_time = random.random()  # [0,1)
         time.sleep(sleep_time)
 
     def get_request(self, endpoint: str, params: dict) -> dict:
         """Make a GET request to API endpoint with set cookies and headers"""
-        self.__sleep_random()
+        self._sleep_random()
         res = self.session.get(
             self.api_url + endpoint,
             params=params,
         )
-        return self.__response_to_json(res)
+        return self._response_to_json(res)
 
     def post_request(self, endpoint: str, **kwargs) -> dict:
         """
         Make a POST request to API endpoint with set cookies and headers.
         Use json={} or data=\"\"
         """
-        self.__sleep_random()
+        self._sleep_random()
         res = self.session.post(
             self.api_url + endpoint,
             **kwargs,
         )
-        return self.__response_to_json(res)
+        return self._response_to_json(res)

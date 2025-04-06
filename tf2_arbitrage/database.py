@@ -1,32 +1,44 @@
-from .config import DB_HOST, DB_PORT
+from os import getenv
 
 from pymongo import MongoClient
 
 
 class Database:
-    def __init__(self, host: str = DB_HOST, port: int = DB_PORT) -> None:
-        self._client = MongoClient(host=host, port=port)
-        self.db = self._client["odysseus"]
+    def __init__(self) -> None:
+        host = getenv("DATABASE_HOST", "localhost")
+        port = int(getenv("DATABASE_PORT", 27017))
 
-        self.cookies = self.db["cookies"]
-        self.prices = self.db["prices"]
-        self.trade_urls = self.db["trade_urls"]
+        client = MongoClient(host=host, port=port)
+        db = client["tf2-arbitrage"]
+
+        self.cookies = db["cookies"]
+        self.prices = db["prices"]
+        self.trade_urls = db["trade_urls"]
+
+    def get_prices_tf_prices(self) -> dict:
+        return self.prices_tf_prices.find_one({})
+
+    def get_stn_schema(self) -> dict:
+        return self.stn_schema.find_one({})
 
     def add_trade_url(self, steam_id: str, account_id: str, token: str) -> None:
         self.trade_urls.replace_one(
             {"steam_id": steam_id},
             {"steam_id": steam_id, "account_id": account_id, "token": token},
-            True,
+            upsert=True,
         )
 
-    def get_trade_url(self, steam_id: str) -> str:
+    def get_trade_url(self, steam_id: str) -> str | None:
         document = self.trade_urls.find_one({"steam_id": steam_id})
 
         if not document:
-            return ""
+            return
 
+        account_id = document["account_id"]
+        token = document["token"]
         trade_url = "https://steamcommunity.com/tradeoffer/new/?partner={}&token={}"
-        return trade_url.format(document["account_id"], document["token"])
+
+        return trade_url.format(account_id, token)
 
     def save_cookies(self, data: dict) -> None:
         self.cookies.replace_one({"name": data["name"]}, data, True)
