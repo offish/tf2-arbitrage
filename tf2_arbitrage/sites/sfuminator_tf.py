@@ -3,10 +3,10 @@ import logging
 from tf2_data import DEFINDEX_NAMES, QUALITIES
 from tf2_sku import to_sku
 
-from .sites import Site
+from .trading_site import TradingSite
 
 
-class Sfuminator(Site):
+class SfuminatorTF(TradingSite):
     def __init__(self, r) -> None:
         name = "sfuminator"
         url = "https://sfuminator.tf/"

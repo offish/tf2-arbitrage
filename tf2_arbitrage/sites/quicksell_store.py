@@ -5,10 +5,10 @@ from tf2_data import QUALITIES
 from tf2_sku import to_sku
 from tf2_utils import to_refined, to_scrap
 
-from .sites import Site
+from .trading_site import TradingSite
 
 
-class QuicksellStore(Site):
+class QuicksellStore(TradingSite):
     def __init__(self, r) -> None:
         name = "quicksell"
         url = "https://quicksell.store/"

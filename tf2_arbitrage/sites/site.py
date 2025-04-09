@@ -1,39 +1,21 @@
 import json
 import logging
-import random
-import time
+from abc import ABC, abstractmethod
 
 import requests
-from selenium.webdriver import FirefoxOptions, FirefoxProfile
 from tf2_utils import SchemaItemsUtils
 
-from ..config import FIREFOX_PROFILE_PATH, HEADLESS, STEAM_ID
 
-
-class Site:
+class Site(ABC):
     def __init__(
-        self, r: requests, name: str, url: str, api_url: str, headers: dict = {}
+        self, site_name: str, url: str, api_url: str, headers: dict = {}
     ) -> None:
-        # requests
-        self.r = r
-        self.session = r.Session()
+        self.session = requests.Session()
         self.session.headers.update(headers)
-
-        # specifics
-        self.name = name
+        self.site_name = site_name
         self.url = url
         self.api_url = api_url
 
-        # selenium if we get javascript challenges
-        self.options = FirefoxOptions()
-        self.options.headless = HEADLESS
-        self.options.profile = FirefoxProfile(FIREFOX_PROFILE_PATH)
-
-        # data
-        self.our_steam_id = STEAM_ID
-        self.prices = {}
-        # self.site_inventory = {}
-        # self.our_inventory = {}
         self.last_fetch = 0
         self.utils = SchemaItemsUtils()
 
@@ -51,55 +33,20 @@ class Site:
         """
         return self.prices
 
-    def clear_prices(self) -> None:
-        self.prices = {}
-
-    def fetch_site_inventory(self) -> None:
-        pass
-
-    def fetch_our_inventory(self) -> None:
-        pass
-
-    def get_inventories(self) -> None:
-        """Get site and our inventories"""
-        self.fetch_site_inventory()
-        self.fetch_our_inventory()
-        logging.info(f"got inventories from {self.name}")
-
-    def request_trade(self, sku: str, intent: str) -> dict:
-        pass
-
+    @abstractmethod
     def get_price(self, sku: str) -> dict:
-        """
-        {
-            "buy": {"keys": 0, "metal": 50.33},
-            "sell": {"keys": 0, "metal": 50.44}
-        }
-        """
-        return self.prices[sku]
+        pass
 
-    def set_cookies(self, cookies: list) -> None:
+    def set_cookies(self, cookies: list[dict]) -> None:
         cookie_dict = {cookie["name"]: cookie["value"] for cookie in cookies}
         self.session.cookies.update(cookie_dict)
         logging.debug("cookies set")
 
     @staticmethod
-    def _get_content_from_response(res: requests.Response) -> str:
-        return res.content
+    def _response_to_json(res: requests.Response) -> dict:
+        content = res.content
+        logging.debug(f"content: {content=}")
 
-    def _response_to_json(self, res: requests.Response) -> dict:
-        content = self._get_content_from_response(res)
-        # logging.debug(f"content: {content}")
-
-        # if "Enable JavaScript and cookies to continue" in content.decode("utf-8"):
-        #     self.driver = Firefox(options=self.options)
-        #     logging.info("got javascript challenge, launching selenium")
-        #     self.driver.get(res.url)
-
-        #     time.sleep(5)
-
-        #     content = self.driver.page_source
-        #     self.driver.quit()
         try:
             return json.loads(content)
         except json.decoder.JSONDecodeError:
@@ -148,10 +95,6 @@ class Site:
             else:
                 self.prices[sku][asset_ids_key].append(asset_id)
 
-    def _sleep_random(self) -> None:
-        sleep_time = random.random()  # [0,1)
-        time.sleep(sleep_time)
-
     def get_request(self, endpoint: str, params: dict) -> dict:
         """Make a GET request to API endpoint with set cookies and headers"""
         self._sleep_random()
@@ -166,7 +109,6 @@ class Site:
         Make a POST request to API endpoint with set cookies and headers.
         Use json={} or data=\"\"
         """
-        self._sleep_random()
         res = self.session.post(
             self.api_url + endpoint,
             **kwargs,
